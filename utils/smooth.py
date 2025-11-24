@@ -45,17 +45,8 @@ def get_delta_angles(target):
 def clamp(value, min_val, max_val):
     return max(min_val, min(max_val, value))
 
-async def look(target): # chatgpt ai pmo
-    # --- tweakable realism variables ---
-    max_speed = 3         # max per-frame turn
-    min_speed = 1          # slow near target
-    arch_strength = 6      # controls curve of motion
-    micro_jitter = 0.3      # tiny hand shake
-    slowdown_angle = 5       # degrees for easing near target
-    good_enough_angle = 3       # kattoo millo koodi kattoo että on tarpeeks lähellä ja lopettaa aimaamise
-    
-    # -----------------------------------
-
+async def look(target, max_speed = 3, min_speed = 1, arch_strength = 6, micro_jitter = 0.3, slowdown_angle = 5, good_enough_angle = 3):
+    minescript.echo("hi")
     yaw, pitch = minescript.player_orientation()
     rel_yaw, rel_pitch = get_relative_angles(target)
     total_dist = math.hypot(rel_yaw, rel_pitch)
