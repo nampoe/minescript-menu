@@ -45,14 +45,13 @@ def get_delta_angles(target):
 def clamp(value, min_val, max_val):
     return max(min_val, min(max_val, value))
 
-async def look(target, max_speed = 3, min_speed = 1, arch_strength = 6, micro_jitter = 0.3, slowdown_angle = 5, good_enough_angle = 3):
-    minescript.echo("hi")
+async def look(target, max_speed = 3, min_speed = 1, arch_strength = 6, micro_jitter = 0.3, slowdown_angle = 5, good_enough_angle = 3): # parameters should be self explanatory, do not use good_enough_angle = 0, it will never return as true 
     yaw, pitch = minescript.player_orientation()
     rel_yaw, rel_pitch = get_relative_angles(target)
     total_dist = math.hypot(rel_yaw, rel_pitch)
 
     if total_dist < good_enough_angle:
-        return  # Already aligned
+        return True # Already aligned
 
     # --- Non-linear speed curve (fast start, slow near target) ---
     speed = clamp(max_speed * (total_dist / 30), min_speed, max_speed)
