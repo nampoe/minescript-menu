@@ -35,11 +35,13 @@ moving_flag         = 1
 coolflag            = 0
 
 minrandom           = 0.05
-maxrandom           =0.3
+maxrandom           = 0.3
 
 initial_delay_checked = 0
 
 breakflag = 0
+
+pauseflag = 0
 
 minescript.player_press_forward(False)
 minescript.player_press_left(False)
@@ -191,8 +193,10 @@ def anti_macro_check(a):
 
 async def anti_macro_check_loop(initial_delay_checked):
     global breakflag
-
+    global pauseflag
     while True:
+        if(pauseflag == 1):
+            time.sleep(0.1)
         if(breakflag):
             break
         await asyncio.sleep(1)
@@ -260,7 +264,7 @@ async def look_at_wheat(cyaww,cx,cy,cz):
     while True:
         if(breakflag):
             break
-        on_target = await smooth.look(target, good_enough_angle = random.uniform(0.05,0.1))
+        on_target = await smooth.look(target, good_enough_angle = random.uniform(1,3))
         if (on_target):
             yaw,pitch = minescript.player_orientation()
             cyaw,cpitch = minescript.player_orientation()
@@ -274,6 +278,7 @@ async def look_at_wheat(cyaww,cx,cy,cz):
 async def main():
     global cx,cz,cy,cpitch,cyaw,moving_flag,flag_move_forward,flag_move_left,flag_move_back,flag_move_right,breakflag
     global breakflag
+    global pauseflag
  
     moving_flag = 1
     looked_at_wheat_flag = 0
@@ -297,23 +302,23 @@ async def main():
 
         if(cx <= -42 and cx >= -43):
             if(cz >= 47 and cz <= 48):
+                pauseflag = 1
                 minescript.player_press_attack(False)
-
-
-                minescript.player_press_forward(True)
+                minescript.player_press_forward(False)
                 minescript.player_press_left(False)
                 minescript.player_press_backward(False)
                 minescript.player_press_right(False)
                 minescript.execute("/warp garden")
                 await look_at_wheat(cyaw,cx,cy,cz)
-                time.sleep(2)
+                time.sleep(random.uniform(20 , 40))
                 minescript.player_press_attack(True)
+                pauseflag = 0
 
 
         await move_loop()
         
         
-        if(i % 13900 == 0):
+        if(i % 650 == 0):
             minescript.player_press_attack(False)
             time.sleep(random.uniform(0.1, 0.2))
             minescript.player_press_attack(True)
