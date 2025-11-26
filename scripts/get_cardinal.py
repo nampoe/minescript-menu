@@ -3,7 +3,7 @@ import time
 
 
 
-for _ in range(100):
+for _ in range(1):
     yaw,pitch = minescript.player_orientation()
 
     ryaw = yaw % 360
@@ -20,3 +20,5 @@ for _ in range(100):
     if (ryaw >= 225 and ryaw <= 315):
         print("east")
     
+x,y,z = minescript.player_position()
+minescript.echo(x,y,z)

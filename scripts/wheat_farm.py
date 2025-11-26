@@ -5,6 +5,7 @@ import winsound
 import sys
 import asyncio
 import minescript
+ding = "C:\\Users\\jani\\Downloads\\ding.wav"
 
 sys.path.insert(1, 'C:/Users/jani/AppData/Roaming/.minecraft/minescript/menu/utils')
 import smooth
@@ -12,7 +13,6 @@ import tracemalloc
 
 tracemalloc.start()
 
-ding = "C:\\Users\\jani\\Downloads\\ding.wav"
 
 
 x,y,z               = minescript.player().position
@@ -98,7 +98,10 @@ def d():
 
 async def moving(rounding = 1):
     global cx,cz,cy,cpitch,cyaw,moving_flag,flag_move_forward,flag_move_left,flag_move_back,flag_move_right
+    global breakflag
     while True:
+        if(breakflag):
+            break
         opos = [cx,cy,cz]
         opos_r = [round(p, rounding) for p in opos]
 
@@ -115,7 +118,6 @@ async def moving(rounding = 1):
 async def move_loop():
     global flag_move_forward,flag_move_left,flag_move_back,flag_move_right,moving_flag, minrandom,maxrandom,moving_flag,coolflag
 
-    minescript.echo("mf: ", moving_flag)
     if(moving_flag == 0 and flag_move_right == 1):
         w()
         await asyncio.sleep(random.uniform(minrandom,maxrandom))
@@ -143,40 +145,66 @@ async def move_loop():
 
 
 def check_y_changed():
-    if cy <= y - 1 or cy >= y + 1:
+    if cy <= y - 0.5 or cy >= y + 0.5:
+        winsound.PlaySound(ding, winsound.SND_FILENAME)
+
         minescript.echo("stop, Y level has changed significantly")
         return True
+    else:
+        return False
     
 def check_viewangle_changed():
+    global cpitch,cyaw,pitch,yaw
+    cpitch = round(cpitch, 1)
+    pitch = round(pitch, 1)
+    cyaw = round(cyaw, 1)
+    yaw = round(yaw, 1)
+
+
     if cpitch != pitch or cyaw != yaw:
+        minescript.echo("cpitch: ", cpitch, "pitch: ", pitch, "cyaw: ", cyaw, "yaw: ", yaw)
         minescript.echo("stop, Viewangle has changed")
         return True
+    else:
+        return False
        
 def anti_macro_check(a):
     global breakflag
-    if(a):
+    if any(a):
         winsound.PlaySound(ding, winsound.SND_FILENAME)
 
         time.sleep(random.uniform(0.2,0.5))
 
 
         minescript.player_press_attack(False)
+        time.sleep(random.uniform(0.1,0.2))
+
         minescript.player_press_forward(False)
+        time.sleep(random.uniform(0.1,0.2))
         minescript.player_press_left(False)
+        time.sleep(random.uniform(0.1,0.2))
         minescript.player_press_backward(False)
+        time.sleep(random.uniform(0.1,0.2))
         minescript.player_press_right(False)
+
         breakflag = 1
 
 async def anti_macro_check_loop(initial_delay_checked):
-    if initial_delay_checked == 0:
-        await asyncio.sleep(3)
+    global breakflag
 
-        results = [fn() for fn in checks]
-        anti_macro_check(results)
-        initial_delay_checked = True
-        return
-    else:
-        return
+    while True:
+        if(breakflag):
+            break
+        await asyncio.sleep(1)
+        if initial_delay_checked == 0:
+            await asyncio.sleep(5)
+
+            results = [fn() for fn in checks]
+            anti_macro_check(results)
+            initial_delay_checked = True
+        else:
+            results = [fn() for fn in checks]
+            anti_macro_check(results)
 
 checks = [check_y_changed, check_viewangle_changed]
 
@@ -202,14 +230,40 @@ def get_cardinal_dir(yaw):
         # print("east")
         return 2
 
-async def look_at_wheat():
+async def look_at_wheat(cyaww,cx,cy,cz):
+    global breakflag
+    global yaw,cyaw,pitch,cpitch
+    if(get_cardinal_dir(cyaww) == 3):
+        minescript.echo("looking south")
+        target = cx - 0.5        ,cy + 1   ,cz + 5
+        
+    if(get_cardinal_dir(cyaw) == 4):
+        minescript.echo("looking west")
+        target = cx - 5 ,cy + 1   ,cz - 0.5
+
+    if(get_cardinal_dir(cyaw) == 1):
+        minescript.echo("looking north")
+        target = cx     - 0.5,cy + 1   ,cz -5
+
+    if(get_cardinal_dir(cyaw) == 2):
+        minescript.echo("looking east")
+        target = cx + 5 ,cy + 1   ,cz - 0.5
+
+    bx,by,bz = target
+    bx + random.uniform(-0.1,0.1)
+    by + random.uniform(-0.1,0.1)
+    bz + random.uniform(-0.1,0.1)
+    target = bx,by,bz
+        
+
+
     while True:
-        return
-
-        target2 = 31, -60.4, -9
-
-        on_target = await smooth.look(target2, good_enough_angle = 0.1)
+        if(breakflag):
+            break
+        on_target = await smooth.look(target, good_enough_angle = random.uniform(0.05,0.1))
         if (on_target):
+            yaw,pitch = minescript.player_orientation()
+            cyaw,cpitch = minescript.player_orientation()
             break
 
 # --------------- 👀 osasto ---------------
@@ -219,30 +273,60 @@ async def look_at_wheat():
            
 async def main():
     global cx,cz,cy,cpitch,cyaw,moving_flag,flag_move_forward,flag_move_left,flag_move_back,flag_move_right,breakflag
-    d()
+    global breakflag
+ 
     moving_flag = 1
-    cardinal_dir = get_cardinal_dir(cyaw)
+    looked_at_wheat_flag = 0
+    if looked_at_wheat_flag == 0:
+        await look_at_wheat(cyaw,cx,cy,cz)
+        time.sleep(2)
+        looked_at_wheat_flag = 1
+        minescript.player_press_attack(True)
+    d()
 
+    i = 1
     while True:
         if(breakflag):
             break
 
         await asyncio.sleep(0.1)
+
         cx,cy,cz    = await asyncio.to_thread(lambda: minescript.player().position)
         cpitch      = await asyncio.to_thread(lambda: minescript.player().pitch)
         cyaw        = await asyncio.to_thread(lambda: minescript.player().yaw)
 
+        if(cx <= -42 and cx >= -43):
+            if(cz >= 47 and cz <= 48):
+                minescript.player_press_attack(False)
+
+
+                minescript.player_press_forward(True)
+                minescript.player_press_left(False)
+                minescript.player_press_backward(False)
+                minescript.player_press_right(False)
+                minescript.execute("/warp garden")
+                await look_at_wheat(cyaw,cx,cy,cz)
+                time.sleep(2)
+                minescript.player_press_attack(True)
+
 
         await move_loop()
+        
+        
+        if(i % 13900 == 0):
+            minescript.player_press_attack(False)
+            time.sleep(random.uniform(0.1, 0.2))
+            minescript.player_press_attack(True)
+            minescript.echo("randomized +attack")
+        i += 1
 
 
 
 async def main_loop():
 
     await asyncio.gather(
-        moving(),
         main(),
-        look_at_wheat(),
+        moving(),
         anti_macro_check_loop(initial_delay_checked)
     )
              
