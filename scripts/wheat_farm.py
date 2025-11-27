@@ -5,9 +5,9 @@ import winsound
 import sys
 import asyncio
 import minescript
-ding = "C:\\Users\\jani\\Downloads\\ding.wav"
+ding = "ding path here"
 
-sys.path.insert(1, 'C:/Users/jani/AppData/Roaming/.minecraft/minescript/menu/utils')
+sys.path.insert(1, 'minescript/menu/utils') # fix this
 import smooth
 import tracemalloc
 
